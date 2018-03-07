@@ -16,7 +16,7 @@ library(vegan)
 options(stringsAsFactors = FALSE)
 ```
 
-```{r}
+```{r fc-reorder}
 # function to reorder clusters in order of descending size
 fc_reorder <- function(x, orderby = "decending size") {
   ko <- x
@@ -33,6 +33,29 @@ fc_reorder <- function(x, orderby = "decending size") {
 ```
 
 
+```{r fc-reclist}
+fc_reclist <- function(len){
+    if (length(len) == 1) {
+        vector("list", len)
+    } else {
+        lapply(1:len[1], function(...) rec.list(len[-1]))
+    }
+}
+```
+
+
+# The problem
+
+Find a clustering method that is able to:
+
+- cluster items where some items are forced to end up together in one cluster (group constraints)
+- a method that is able to predict in which cluster a new item would end up
+- use any distance measure
+
+
+# The flexclust::kcca() function
+
+## k-means with group constraints 
 
 ```{r}
 set.seed(123456)
@@ -40,13 +63,12 @@ data(iris)
 iris <- iris %>% 
   tbl_df() %>%
   mutate(Species = as.character(Species), 
-         group_of_one = 1:n(),
          species_subset = ifelse(sample(c(TRUE, FALSE), 
                                         size = n(), 
                                         prob = c(0.5, 0.5), 
                                         replace = TRUE) == TRUE, 
                                  Species, 
-                                 group_of_one))
+                                 1:n()))
 ```
 
 
@@ -92,17 +114,11 @@ result <- stepFlexclust(x = iris[,1:4],
 
 
 ```{r}
-rec.list <- function(len){
-    if(length(len) == 1){
-        vector("list", len)
-    } else {
-        lapply(1:len[1], function(...) rec.list(len[-1]))
-    }
-}
+
 
 ks <- 2:5
 nreps <- 1:20
-models <- rec.list(c(length(ks), length(nreps)))
+models <- fc_reclist(c(length(ks), length(nreps)))
 
 for (k in ks) {
   for (nrep in nreps) {
@@ -146,8 +162,9 @@ table(clusters(clres),mygroups)
 result <- stepFlexclust(x = x, 
               k = 2:5, 
               nrep = 2, 
-              FUN = kcca,
-              group = mygroups)
+              FUN = kcca
+              #,              group = mygroups # adding group constraints results in error subscript out of bounds
+              )
 
 ```
 
