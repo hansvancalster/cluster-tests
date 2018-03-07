@@ -100,7 +100,41 @@ table(clusters(means_5), iris$Species)
 ```
 
 
+## Visualisation
 
+The plot-method for the S4 class kcca does not work properly when group constraints present. Here is a solution using ggplot.
+
+Solid line encloses 50% of relevés in cluster; dotted 95%. Encircled number gives centroid of each cluster. A thin line to other centroid indicates better separation (in real problem space). Each relevé is plotted against the first two principal components of data. Color is cluster assignment.
+
+```{r}
+iris_pca <- prcomp(iris[,1:4])
+```
+
+
+```{r}
+iris %>% 
+  mutate(cluster = as.factor(clusters(means_5)),
+         pc1 = scores(iris_pca, display = "sites")[,1],
+         pc2 = scores(iris_pca, display = "sites")[,2]) %>%
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point(aes(colour = cluster, shape = Species)) + 
+  stat_ellipse(aes(colour = cluster)) + 
+  coord_equal()
+
+```
+
+Header: segment #,Count, & % total
+Bar: proportion of response in cluster. Red line/dot: overall proportion
+Greyed out when response not important to differentiate from other clusters. BUT, can still be an important characteristic of cluster
+
+```{r}
+barchart(means_5, strip.prefix = "#", shade = TRUE, layout = c(means_5@k, 1))
+```
+
+
+
+
+## Find best k and stable solution
 
 ```{r}
 result <- stepFlexclust(x = iris[,1:4], 
