@@ -16,6 +16,22 @@ library(vegan)
 options(stringsAsFactors = FALSE)
 ```
 
+```{r}
+# function to reorder clusters in order of descending size
+fc_reorder <- function(x, orderby = "decending size") {
+  ko <- x
+  cl_map <- order(ko@clusinfo$size, decreasing = TRUE)
+  ko@second <- cl_map[ko@second]
+  ko@clsim <- ko@clsim[cl_map, cl_map]
+  ko@centers <- ko@centers[cl_map, ]
+  ko@cluster <- cl_map[ko@cluster]
+  ko@clusinfo <- ko@clusinfo[cl_map, ]
+  # ko@reorder <- cl_map                   add slot with reorder mapping
+  return(ko)
+}
+
+```
+
 
 
 ```{r}
